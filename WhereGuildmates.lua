@@ -1,80 +1,88 @@
 addonName = "WhereGuildmates";
 
+local soundBasePath = "Interface\\AddOns\\WhereGuildmates\\sounds\\";
+local soundFileExt = ".ogg";
+
 local frame = CreateFrame("Frame");
 frame:RegisterEvent("CHAT_MSG_SYSTEM");
 
-local online_msg = ERR_FRIEND_ONLINE_SS:gsub("%%s", "(.-)"):gsub("[%[%]]", "%%%1");
-local offline_msg = ERR_FRIEND_OFFLINE_S:gsub("%%s", "(.-)");
+local onlineSysMsg = ERR_FRIEND_ONLINE_SS:gsub("%%s", "(.-)"):gsub("[%[%]]", "%%%1");
+local offlineSysMsg = ERR_FRIEND_OFFLINE_S:gsub("%%s", "(.-)");
 
-local function GetPlayerNameFromMsg(msg)
+--- Get player from a blizzard sys message.
+-- The function will extract a player/character name and his online status from a blizzard sys message.
+-- @param msg The blizzard sys message.
+-- @return Targeted player/character name and his online status.
+local function GetPlayerFromMsg(msg)
 	local name = nil;
-
-	if(msg:find(online_msg)) then
-		_, name = strmatch(msg, online_msg);
-	elseif(msg:find(offline_msg)) then
-		name = strmatch(msg, offline_msg);
+	local isOnline = nil;
+	if(msg:find(onlineSysMsg)) then
+		isOnline = true;
+		_, name = strmatch(msg, onlineSysMsg);
+	elseif(msg:find(offlineSysMsg)) then
+		isOnline = false;
+		name = strmatch(msg, offlineSysMsg);
 	end
-
-	return name;
+	return name, isOnline;
 end
 
+--- Get player from a guild.
+-- The function will get a guildmate/character name from the actual player guild.
+-- @param index An integer index value.
+-- @return Guildmate/character name.
 local function GetPlayerNameFromGuild(index)
 	local name = GetGuildRosterInfo(index):match("(.*-)"):gsub('-', '');
 	return name;
 end
 
-local function LoginCustomRule(playerName)
-	local sound = "Interface\\AddOns\\WhereGuildmates\\sounds\\login.ogg";
-
-	if(playerName == "Gorkah") then
-		sound = "Interface\\AddOns\\WhereGuildmates\\sounds\\ee\\login_gorkah.ogg";
-	elseif(playerName == "Krÿg") then
-		sound = "Interface\\AddOns\\WhereGuildmates\\sounds\\ee\\login_kryg.ogg";
-	elseif(playerName == "Borsâ") then
-		sound = "Interface\\AddOns\\WhereGuildmates\\sounds\\ee\\login_borsa.ogg";
-	elseif(playerName == "Ewïlan") then
-		sound = "Interface\\AddOns\\WhereGuildmates\\sounds\\ee\\login_ewilan.ogg";
-	elseif(playerName == "Klamidiaa") then
-		sound = "Interface\\AddOns\\WhereGuildmates\\sounds\\ee\\login_klam.ogg";
+--- Apply some rules and get sound.
+-- The function will apply rules and get the correct sound path.
+-- @param playerName The player/character name.
+-- @param isNowOnline The player/character online status.
+-- @return Path to a sound.
+local function ApplySoundRule(playerName, isNowOnline)
+	local sound = nil;
+	if(isNowOnline == true) then
+		sound = soundBasePath.."login.ogg";
+		if (GetRealmName() == "Hyjal") then -- custom rules
+			if(playerName == "Gorkah") then
+				sound = soundBasePath.."ee\\login_gorkah"..soundFileExt;
+			elseif((playerName == "Krÿg") or (playerName == "Pwyk")) then
+				sound = soundBasePath.."ee\\login_kryg"..soundFileExt;
+			elseif(playerName == "Borsâ") then
+				sound = soundBasePath.."ee\\login_borsa"..soundFileExt;
+			elseif(playerName == "Ewïlan") then
+				sound = soundBasePath.."ee\\login_ewilan"..soundFileExt;
+			elseif(playerName == "Klamidiaa") then
+				sound = soundBasePath.."ee\\login_klam"..soundFileExt;
+			elseif((playerName == "Yonhsha") or (playerName == "Yhonna") or (playerName == "Yonnhh")) then
+				sound = soundBasePath.."ee\\login_yonh"..soundFileExt;
+			elseif(playerName == "Barazinbar") then
+				sound = soundBasePath.."ee\\login_bara"..soundFileExt;
+			end
+		end
 	else
+		sound = soundBasePath.."logout.ogg";
+
 		num = math.random() and math.random() and math.random() and math.random(0, 20)
 		if(num == 10) then
-			sound = "Interface\\AddOns\\WhereGuildmates\\sounds\\ee\\wololo.ogg";
+			sound = soundBasePath.."ee\\wololo"..soundFileExt; -- an easter egg
 		end
 	end
-
 	return sound;
 end
 
-local function LogoutCustomRule(playerName)
-	local sound = "Interface\\AddOns\\WhereGuildmates\\sounds\\logout.ogg";
-
-	if(playerName == "Gorkah") then
-		sound = "Interface\\AddOns\\WhereGuildmates\\sounds\\logout.ogg";
-	else
-		num = math.random() and math.random() and math.random() and math.random(0, 20)
-		if(num == 10) then
-			sound = "Interface\\AddOns\\WhereGuildmates\\sounds\\ee\\wololo.ogg";
-		end
-	end
-
-	return sound;
-end
-
+--- Main event handler function.
+-- If event have been caught, this function runs.
 local function EventHandler(self, event, msg)
-	local msgPlayerName = GetPlayerNameFromMsg(msg);
-
-	if(msgPlayerName == nil or msgPlayerName == '') then
+	local msgPlayerName, isNowOnline = GetPlayerFromMsg(msg);
+	if((msgPlayerName == nil) or (msgPlayerName == '') or (isNowOnline == nil)) then
 		-- do nothing
 	else
 		for i=1,GetNumGuildMembers(true) do
-			local guildPlayerName = GetPlayerNameFromGuild(i);
-			if((guildPlayerName == msgPlayerName)) then
-				if(msg:find(online_msg)) then
-					PlaySoundFile(LoginCustomRule(msgPlayerName), "Master");
-				elseif(msg:find(offline_msg)) then
-					PlaySoundFile(LogoutCustomRule(msgPlayerName), "Master");
-				end
+			if(msgPlayerName == GetPlayerNameFromGuild(i)) then
+				local sound = ApplySoundRule(msgPlayerName, isNowOnline);
+				PlaySoundFile(sound, "Master");
 				break
 			end
 		end
