@@ -59,6 +59,8 @@ local function ApplySoundRule(playerName, isNowOnline)
 				sound = soundBasePath.."ee\\login_yonh"..soundFileExt;
 			elseif(playerName == "Barazinbar") then
 				sound = soundBasePath.."ee\\login_bara"..soundFileExt;
+			elseif((playerName == "Docvoker") or (playerName == "Docmonk")) then
+				sound = soundBasePath.."ee\\login_doc"..soundFileExt;
 			end
 		end
 	else
