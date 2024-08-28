@@ -42,33 +42,23 @@ end
 -- @return Path to a sound.
 local function ApplySoundRule(playerName, isNowOnline)
     local sound = nil;
-    local function fileExists(path)
-        local file = io.open(path, "r")
-        if file then
-            io.close(file)
-            return true
-        else
-            return false
-        end
-    end   
     if isNowOnline then
-        local customSoundPathLogin = soundBasePath .. "ee\\login_" .. playerName .. soundFileExt;
-        if fileExists(customSoundPathLogin) then
-            sound = customSoundPathLogin;
+        local customSoundPathLogin = soundBasePath .. "custom\\login_" .. playerName .. soundFileExt;
+        if not PlaySoundFile(customSoundPathLogin, "Master") then
+            sound = soundBasePath .. "login" .. soundFileExt;
         else
-            sound = soundBasePath .. "login.ogg";
+            sound = customSoundPathLogin;
         end
     else
-        local customSoundPathLogout = soundBasePath .. "ee\\logout_" .. playerName .. soundFileExt;
-        if fileExists(customSoundPathLogout) then
-            sound = customSoundPathLogout;
+        local customSoundPathLogout = soundBasePath .. "custom\\logout_" .. playerName .. soundFileExt;
+        if not PlaySoundFile(customSoundPathLogout, "Master") then
+            sound = soundBasePath .. "logout" .. soundFileExt;
         else
-            sound = soundBasePath .. "logout.ogg"; 
+            sound = customSoundPathLogout;
         end
-        local num = math.random(0, 20)
-        if num == 10 then
-            sound = soundBasePath .. "ee\\wololo" .. soundFileExt;
-        end
+    end
+    if sound then
+        PlaySoundFile(sound, "Master");
     end
     return sound;
 end
