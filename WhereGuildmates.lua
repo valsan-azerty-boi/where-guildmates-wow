@@ -41,45 +41,47 @@ end
 -- @param isNowOnline The player/character online status.
 -- @return Path to a sound.
 local function ApplySoundRule(playerName, isNowOnline)
-	local sound = nil;
-	if(isNowOnline == true) then
-		sound = soundBasePath.."login.ogg";
-		if (GetRealmName() == "Hyjal") then -- custom rules
-			if(playerName == "Gorkah") then
-				sound = soundBasePath.."ee\\login_gorkah"..soundFileExt;
-			elseif((playerName == "Krÿg") or (playerName == "Pwyk")) then
-				sound = soundBasePath.."ee\\login_kryg"..soundFileExt;
-			elseif(playerName == "Borsâ") then
-				sound = soundBasePath.."ee\\login_borsa"..soundFileExt;
-			elseif(playerName == "Ewïlan") then
-				sound = soundBasePath.."ee\\login_ewilan"..soundFileExt;
-			elseif(playerName == "Klamidiaa") then
-				sound = soundBasePath.."ee\\login_klam"..soundFileExt;
-			elseif((playerName == "Yonhsha") or (playerName == "Yhonna") or (playerName == "Yonnhh")) then
-				sound = soundBasePath.."ee\\login_yonh"..soundFileExt;
-			elseif(playerName == "Barazinbar") then
-				sound = soundBasePath.."ee\\login_bara"..soundFileExt;
-			elseif((playerName == "Docvoker") or (playerName == "Docmonk")) then
-				sound = soundBasePath.."ee\\login_doc"..soundFileExt;
-			end
-		end
-	else
-		sound = soundBasePath.."logout.ogg";
-
-		num = math.random() and math.random() and math.random() and math.random(0, 20)
-		if(num == 10) then
-			sound = soundBasePath.."ee\\wololo"..soundFileExt; -- an easter egg
-		end
-	end
-	return sound;
+    local sound = nil;
+    local function fileExists(path)
+        local file = io.open(path, "r")
+        if file then
+            io.close(file)
+            return true
+        else
+            return false
+        end
+    end   
+    if isNowOnline then
+        local customSoundPathLogin = soundBasePath .. "ee\\login_" .. playerName .. soundFileExt;
+        if fileExists(customSoundPathLogin) then
+            sound = customSoundPathLogin;
+        else
+            sound = soundBasePath .. "login.ogg";
+        end
+    else
+        local customSoundPathLogout = soundBasePath .. "ee\\logout_" .. playerName .. soundFileExt;
+        if fileExists(customSoundPathLogout) then
+            sound = customSoundPathLogout;
+        else
+            sound = soundBasePath .. "logout.ogg"; 
+        end
+        local num = math.random(0, 20)
+        if num == 10 then
+            sound = soundBasePath .. "ee\\wololo" .. soundFileExt;
+        end
+    end
+    return sound;
 end
 
 --- Main event handler function.
 -- If event have been caught, this function runs.
+-- @param self Self.
+-- @param event Event.
+-- @param msg Message.
 local function EventHandler(self, event, msg)
 	local msgPlayerName, isNowOnline = GetPlayerFromMsg(msg);
 	if((msgPlayerName == nil) or (msgPlayerName == '') or (isNowOnline == nil)) then
-		-- do nothing
+		-- Do nothing
 	else
 		for i=1,GetNumGuildMembers(true) do
 			if(msgPlayerName == GetPlayerNameFromGuild(i)) then
