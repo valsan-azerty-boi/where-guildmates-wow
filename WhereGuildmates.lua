@@ -1,6 +1,23 @@
 addonName = "WhereGuildmates"
 
-local soundBasePath = "Interface\\AddOns\\WhereGuildmates\\sounds\\"
+local L = {}
+
+local function LoadLocale()
+    local locale = GetLocale()
+    if locale == "frFR" then
+        L["PRESENTATION_TEXT"] = "Cet addon joue un son amusant de péon lorsqu'un membre de ta guilde se connecte ou se déconnecte. Tu peux également ajouter des sons pour chaque membre de ta guilde dans le dossier \"custom\" de cet addon (format ogg/vorbis)."
+        L["DROPDOWN_EXPLANATION"] = "Change le canal audio pour les notifications:"
+        L["SOUND_CHANNEL"] = "Canal audio"
+    else
+        L["PRESENTATION_TEXT"] = "Play a fun peon sound when a guildmate login or logout. You can also add your own custom sounds for each guild member in the \"custom\" folder of this addon (ogg/vorbis)."
+        L["DROPDOWN_EXPLANATION"] = "Select the audio channel for notifications:"
+        L["SOUND_CHANNEL"] = "Sound channel"
+    end
+end
+
+LoadLocale()
+
+local soundBasePath = "Interface\\AddOns\\".. addonName .. "\\sounds\\"
 local soundFileExt = ".ogg"
 
 local frame = CreateFrame("Frame")
@@ -159,21 +176,27 @@ local optionsPanelCreated = false
 
 local function CreateOptionsPanel()
     if optionsPanelCreated then return end
-    -- print("Creating options panel...")
-    local panel = CreateFrame("Frame", "WhereGuildmatesOptionsPanel", UIParent)
+    local panel = CreateFrame("Frame", addonName .. "OptionsPanel", UIParent)
+    panel:SetSize(400, 300)
+    panel:SetPoint("CENTER")
     panel.name = addonName
     panel:Hide()
     local title = panel:CreateFontString(nil, "ARTWORK", "GameFontNormalLarge")
     title:SetPoint("TOPLEFT", 16, -16)
-    title:SetText("WhereGuildmates")
-    local explanationText = panel:CreateFontString(nil, "ARTWORK", "GameFontHighlight")
-    explanationText:SetPoint("TOPLEFT", title, "BOTTOMLEFT", 0, -10)
-    explanationText:SetText("Select the audio channel for notifications:")
-    local dropdown = CreateFrame("Frame", "WhereGuildmatesAudioChannelDropdown", panel, "UIDropDownMenuTemplate")
-    dropdown:SetPoint("TOPLEFT", explanationText, "BOTTOMLEFT", -16, -10)
+    title:SetText(addonName)
+    local presText = panel:CreateFontString(nil, "ARTWORK", "GameFontHighlight")
+    presText:SetPoint("TOPLEFT", title, "BOTTOMLEFT", 0, -16)
+    presText:SetWidth(360)
+    presText:SetJustifyH("LEFT")
+    presText:SetText(L["PRESENTATION_TEXT"])
+    local dropdownExplanationText = panel:CreateFontString(nil, "ARTWORK", "GameFontNormal")
+    dropdownExplanationText:SetPoint("TOPLEFT", presText, "BOTTOMLEFT", 0, -20)
+    dropdownExplanationText:SetText(L["DROPDOWN_EXPLANATION"])
+    local dropdown = CreateFrame("Frame", addonName .. "AudioChannelDropdown", panel, "UIDropDownMenuTemplate")
+    dropdown:SetPoint("TOPLEFT", dropdownExplanationText, "BOTTOMLEFT", 0, -10)
     local function OnClick(self)
         WhereGuildmatesDB.audioChannel = self.value
-        UIDropDownMenu_SetText(dropdown, self.value or "Sound channel")
+        UIDropDownMenu_SetText(dropdown, self.value or L["SOUND_CHANNEL"])
     end
     local function InitializeDropdown(self, level, menuList)
         local info = UIDropDownMenu_CreateInfo()
@@ -186,24 +209,24 @@ local function CreateOptionsPanel()
             UIDropDownMenu_AddButton(info)
         end
     end
-    UIDropDownMenu_SetWidth(dropdown, 150)
+    UIDropDownMenu_SetWidth(dropdown, 100)
     UIDropDownMenu_Initialize(dropdown, InitializeDropdown)
     local function UpdateDropdownText()
-        UIDropDownMenu_SetText(dropdown, WhereGuildmatesDB.audioChannel or "Sound channel")
+        UIDropDownMenu_SetText(dropdown, WhereGuildmatesDB.audioChannel or L["SOUND_CHANNEL"])
     end
     panel:SetScript("OnShow", UpdateDropdownText)
     local function ShowOptionsPanel()
-        -- print("Showing options panel...")
+        -- print("Slash command triggered: Showing options panel...")
         panel:Show()
     end
-    SLASH_WHEREGUILDMATES1 = "/whereguildmates"
+    SLASH_WHEREGUILDMATES1 = "/" .. addonName
     SlashCmdList.WHEREGUILDMATES = ShowOptionsPanel
     if Settings and Settings.RegisterAddOnCategory then
         local category = Settings.RegisterCanvasLayoutCategory(panel, addonName)
         Settings.RegisterAddOnCategory(category)
     elseif InterfaceOptions_AddCategory then
         InterfaceOptions_AddCategory(panel)
-    else
+    -- else
         -- print("Failed to register options panel.")
     end
     optionsPanelCreated = true
