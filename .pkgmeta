@@ -1,5 +1,6 @@
 package-as: WhereGuildmates
 
 ignore:
-  - README.md
+  - CHANGES.txt
   - cover.jpg
+  - README.md

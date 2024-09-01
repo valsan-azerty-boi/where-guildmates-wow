@@ -3,7 +3,7 @@
 ## X-Min-Interface: 110000, 110002
 ## Title: WhereGuildmates
 ## Author: valsan-azerty-boi
-## Version: 2.1.3
+## Version: 2.1.4
 ## DefaultState: Enabled
 ## LoadOnDemand: 0
 ## Notes: Play a fun sound when a guildmate login or logout.
