@@ -1,4 +1,4 @@
-addonName = "WhereGuildmates"
+addonName = ...
 
 local L = {}
 
@@ -217,7 +217,12 @@ local function CreateOptionsPanel()
     panel:SetScript("OnShow", UpdateDropdownText)
     local function ShowOptionsPanel()
         -- print("Slash command triggered: Showing options panel...")
-        panel:Show()
+        if SettingsPanel:IsShown() then
+            HideUIPanel(SettingsPanel)
+        else
+            HideUIPanel(SettingsPanel)
+            Settings.OpenToCategory(addonName)
+        end
     end
     SLASH_WHEREGUILDMATES1 = "/" .. addonName
     SlashCmdList.WHEREGUILDMATES = ShowOptionsPanel
