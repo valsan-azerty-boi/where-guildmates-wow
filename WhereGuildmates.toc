@@ -1,7 +1,8 @@
+## SavedVariables: WhereGuildmatesDB
 ## Interface: 110000, 110002
 ## Title: WhereGuildmates
 ## Author: valsan-azerty-boi
-## Version: 2.0.2
+## Version: 2.1.0
 ## DefaultState: Enabled
 ## LoadOnDemand: 0
 ## Notes: Play a fun sound when a guildmate login or logout.
