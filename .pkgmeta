@@ -1,0 +1,5 @@
+package-as: WhereGuildmates
+
+ignore:
+  - README.md
+  - cover.jpg
