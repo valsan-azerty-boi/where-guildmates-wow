@@ -1,18 +1,39 @@
-addonName = "WhereGuildmates";
+addonName = ...
 
-local soundBasePath = "Interface\\AddOns\\WhereGuildmates\\sounds\\";
-local soundFileExt = ".ogg";
+local L = {}
 
-local frame = CreateFrame("Frame");
-frame:RegisterEvent("CHAT_MSG_SYSTEM");
+local function LoadLocale()
+    local locale = GetLocale()
+    if locale == "frFR" then
+        L["PRESENTATION_TEXT"] = "Cet addon joue un son amusant de péon lorsqu'un membre de ta guilde se connecte ou se déconnecte. Tu peux également ajouter des sons pour chaque membre de ta guilde dans le dossier \"custom\" de cet addon (format ogg/vorbis)."
+        L["DROPDOWN_EXPLANATION"] = "Change le canal audio pour les notifications:"
+        L["SOUND_CHANNEL"] = "Canal audio"
+    else
+        L["PRESENTATION_TEXT"] = "Play a fun peon sound when a guildmate login or logout. You can also add your own custom sounds for each guild member in the \"custom\" folder of this addon (ogg/vorbis)."
+        L["DROPDOWN_EXPLANATION"] = "Select the audio channel for notifications:"
+        L["SOUND_CHANNEL"] = "Sound channel"
+    end
+end
 
-local onlineSysMsg = ERR_FRIEND_ONLINE_SS:gsub("%%s", "(.-)"):gsub("[%[%]]", "%%%1");
-local offlineSysMsg = ERR_FRIEND_OFFLINE_S:gsub("%%s", "(.-)");
+LoadLocale()
 
---- Remove special characters from string.
--- The function replaces special characters with non-special equivalents.
--- @param name The original player name.
--- @return A transformed player name.
+local soundBasePath = "Interface\\AddOns\\".. addonName .. "\\sounds\\"
+local soundFileExt = ".ogg"
+
+local frame = CreateFrame("Frame")
+frame:RegisterEvent("CHAT_MSG_SYSTEM")
+
+local onlineSysMsg = ERR_FRIEND_ONLINE_SS:gsub("%%s", "(.-)"):gsub("[%[%]]", "%%%1")
+local offlineSysMsg = ERR_FRIEND_OFFLINE_S:gsub("%%s", "(.-)")
+
+if not WhereGuildmatesDB then
+    WhereGuildmatesDB = {}
+end
+
+if not WhereGuildmatesDB.audioChannel then
+    WhereGuildmatesDB.audioChannel = "Master"
+end
+
 local function TransformName(name)
     local transformedName = name
     transformedName = transformedName:gsub("á", "a")
@@ -82,89 +103,147 @@ local function TransformName(name)
     return transformedName
 end
 
---- Get player from a blizzard sys message.
--- The function will extract a player/character name and his online status from a blizzard sys message.
--- @param msg The blizzard sys message.
--- @return Targeted player/character name and his online status.
 local function GetPlayerFromMsg(msg)
-	local name = nil;
-	local isOnline = nil;
+	local name = nil
+	local isOnline = nil
 	if(msg:find(onlineSysMsg)) then
-		isOnline = true;
-		_, name = strmatch(msg, onlineSysMsg);
+		isOnline = true
+		_, name = strmatch(msg, onlineSysMsg)
 	elseif(msg:find(offlineSysMsg)) then
-		isOnline = false;
-		name = strmatch(msg, offlineSysMsg);
+		isOnline = false
+		name = strmatch(msg, offlineSysMsg)
 	end
     -- print("GetPlayerFromMsg: Msg:", msg, "Name:", name, "Online:", isOnline)
-	return name, isOnline;
+	return name, isOnline
 end
 
---- Get player from a guild.
--- The function will get a guildmate/character name from the actual player guild.
--- @param index An integer index value.
--- @return Guildmate/character name.
 local function GetPlayerNameFromGuild(index)
-	local name = GetGuildRosterInfo(index):match("(.*-)"):gsub('-', '');
+	local name = GetGuildRosterInfo(index):match("(.*-)"):gsub('-', '')
     -- print("GetPlayerNameFromGuild: Index:", index, "Name:", name)
-	return name;
+	return name
 end
 
---- Apply some rules and get sound.
--- The function will apply rules and get the correct sound path.
--- @param playerName The player/character name.
--- @param isNowOnline The player/character online status.
--- @return Path to a sound.
 local function ApplySoundRule(playerName, isNowOnline)
-    local sound = nil;
+    local sound = nil
     local transformedName = TransformName(playerName)
     -- print("ApplySoundRule: PlayerName:", playerName, "TransformedName:", transformedName, "IsNowOnline:", isNowOnline)
 	-- print("Original Name: ", playerName, " | Transformed Name: ", transformedName)
     if isNowOnline then
-        local customSoundPathLogin = soundBasePath .. "custom\\login_" .. transformedName .. soundFileExt;
+        local customSoundPathLogin = soundBasePath .. "custom\\login_" .. transformedName .. soundFileExt
         -- print("ApplySoundRule: Checking sound:", customSoundPathLogin)
-        if not PlaySoundFile(customSoundPathLogin, "Master") then
+        if not PlaySoundFile(customSoundPathLogin, WhereGuildmatesDB.audioChannel) then
             -- print("ApplySoundRule: Custom login sound not found, using default login sound")
-            sound = soundBasePath .. "login" .. soundFileExt;
+            sound = soundBasePath .. "login" .. soundFileExt
         else
-            sound = customSoundPathLogin;
+            sound = customSoundPathLogin
         end
     else
-        local customSoundPathLogout = soundBasePath .. "custom\\logout_" .. transformedName .. soundFileExt;
+        local customSoundPathLogout = soundBasePath .. "custom\\logout_" .. transformedName .. soundFileExt
         -- print("ApplySoundRule: Checking sound:", customSoundPathLogout)
-        if not PlaySoundFile(customSoundPathLogout, "Master") then
+        if not PlaySoundFile(customSoundPathLogout, WhereGuildmatesDB.audioChannel) then
             -- print("ApplySoundRule: Custom logout sound not found, using default logout sound")
-            sound = soundBasePath .. "logout" .. soundFileExt;
+            sound = soundBasePath .. "logout" .. soundFileExt
         else
-            sound = customSoundPathLogout;
+            sound = customSoundPathLogout
         end
     end
     if sound then
         -- print("ApplySoundRule: Playing sound:", sound)
-        PlaySoundFile(sound, "Master");
+        PlaySoundFile(sound, WhereGuildmatesDB.audioChannel)
     end
-    return sound;
+    return sound
 end
 
---- Main event handler function.
--- If event have been caught, this function runs.
--- @param self Self.
--- @param event Event.
--- @param msg Message.
 local function EventHandler(self, event, msg)
-	local msgPlayerName, isNowOnline = GetPlayerFromMsg(msg);
+	local msgPlayerName, isNowOnline = GetPlayerFromMsg(msg)
 	if((msgPlayerName == nil) or (msgPlayerName == '') or (isNowOnline == nil)) then
         -- print("EventHandler: Invalid message or status, doing nothing")
 	else
 		for i=1,GetNumGuildMembers(true) do
 			if(msgPlayerName == GetPlayerNameFromGuild(i)) then
                 -- print("EventHandler: Match found for:", msgPlayerName)
-				local sound = ApplySoundRule(msgPlayerName, isNowOnline);
-				PlaySoundFile(sound, "Master");
+				local sound = ApplySoundRule(msgPlayerName, isNowOnline)
+				PlaySoundFile(sound, WhereGuildmatesDB.audioChannel)
 				break
 			end
 		end
 	end
 end
 
-frame:SetScript("OnEvent", EventHandler);
+frame:SetScript("OnEvent", EventHandler)
+
+local optionsPanelCreated = false
+
+local function CreateOptionsPanel()
+    if optionsPanelCreated then return end
+    local panel = CreateFrame("Frame", addonName .. "OptionsPanel", UIParent)
+    panel:SetSize(400, 300)
+    panel:SetPoint("CENTER")
+    panel.name = addonName
+    panel:Hide()
+    local title = panel:CreateFontString(nil, "ARTWORK", "GameFontNormalLarge")
+    title:SetPoint("TOPLEFT", 16, -16)
+    title:SetText(addonName)
+    local presText = panel:CreateFontString(nil, "ARTWORK", "GameFontHighlight")
+    presText:SetPoint("TOPLEFT", title, "BOTTOMLEFT", 0, -16)
+    presText:SetWidth(360)
+    presText:SetJustifyH("LEFT")
+    presText:SetText(L["PRESENTATION_TEXT"])
+    local dropdownExplanationText = panel:CreateFontString(nil, "ARTWORK", "GameFontNormal")
+    dropdownExplanationText:SetPoint("TOPLEFT", presText, "BOTTOMLEFT", 0, -20)
+    dropdownExplanationText:SetText(L["DROPDOWN_EXPLANATION"])
+    local dropdown = CreateFrame("Frame", addonName .. "AudioChannelDropdown", panel, "UIDropDownMenuTemplate")
+    dropdown:SetPoint("TOPLEFT", dropdownExplanationText, "BOTTOMLEFT", 0, -10)
+    local function OnClick(self)
+        WhereGuildmatesDB.audioChannel = self.value
+        UIDropDownMenu_SetText(dropdown, self.value or L["SOUND_CHANNEL"])
+    end
+    local function InitializeDropdown(self, level, menuList)
+        local info = UIDropDownMenu_CreateInfo()
+        local channels = {"Master", "Music", "SFX", "Ambience", "Dialog"}
+        for _, channel in pairs(channels) do
+            info.text = channel
+            info.value = channel
+            info.checked = channel == WhereGuildmatesDB.audioChannel
+            info.func = OnClick
+            UIDropDownMenu_AddButton(info)
+        end
+    end
+    UIDropDownMenu_SetWidth(dropdown, 100)
+    UIDropDownMenu_Initialize(dropdown, InitializeDropdown)
+    local function UpdateDropdownText()
+        UIDropDownMenu_SetText(dropdown, WhereGuildmatesDB.audioChannel or L["SOUND_CHANNEL"])
+    end
+    panel:SetScript("OnShow", UpdateDropdownText)
+    local function ShowOptionsPanel()
+        -- print("Slash command triggered: Showing options panel...")
+        if SettingsPanel:IsShown() then
+            HideUIPanel(SettingsPanel)
+        else
+            HideUIPanel(SettingsPanel)
+            Settings.OpenToCategory(addonName)
+        end
+    end
+    SLASH_WHEREGUILDMATES1 = "/" .. addonName
+    SlashCmdList.WHEREGUILDMATES = ShowOptionsPanel
+    if Settings and Settings.RegisterAddOnCategory then
+        local category = Settings.RegisterCanvasLayoutCategory(panel, addonName)
+        Settings.RegisterAddOnCategory(category)
+    elseif InterfaceOptions_AddCategory then
+        InterfaceOptions_AddCategory(panel)
+    -- else
+        -- print("Failed to register options panel.")
+    end
+    optionsPanelCreated = true
+end
+
+local frame = CreateFrame("Frame")
+frame:RegisterEvent("ADDON_LOADED")
+frame:SetScript("OnEvent", function(self, event, addon)
+    if addon == addonName then
+        CreateOptionsPanel()
+        self:UnregisterEvent("ADDON_LOADED")
+    end
+end)
+
+CreateOptionsPanel()

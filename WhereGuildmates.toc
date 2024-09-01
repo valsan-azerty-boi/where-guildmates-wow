@@ -1,14 +1,17 @@
+## SavedVariables: WhereGuildmatesDB
 ## Interface: 110000, 110002
+## X-Min-Interface: 110000, 110002
 ## Title: WhereGuildmates
 ## Author: valsan-azerty-boi
-## Version: 2.0.1
+## Version: 2.1.0
 ## DefaultState: Enabled
 ## LoadOnDemand: 0
 ## Notes: Play a fun sound when a guildmate login or logout.
+## Notes-frFR: Joue un son amusant lorsqu'un membre de ta guilde se connecte ou se déconnecte.
 ## Description: Play a fun sound when a guildmate login or logout.
-## X-Min-Interface: 110000, 110002
+## Description-frFR: Joue un son amusant lorsqu'un membre de ta guilde se connecte ou se déconnecte.
+## IconTexture: Interface\AddOns\WhereGuildmates\icons\icon
 ## X-Website: https://github.com/valsan-azerty-boi/where-guildmates-wow
 ## X-Curse-Project-ID: 705166
-## IconTexture: Interface\AddOns\WhereGuildmates\icons\icon
 
 WhereGuildmates.lua
