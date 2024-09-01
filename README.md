@@ -13,4 +13,4 @@ It was a fun idea from a guildmate so I did it (we have custom sounds for our ch
 Add audio files ("login_{CharacterName}.ogg" or "logout_{CharacterName}.ogg") in the folder "/WhereGuildmates/sounds/custom" and the addon creates custom rules automatically at load.
 
 ### What next for futur versions ?
-- For later version (2.1.0+) => make it work with interfaction guilds (since TWW)
+- For later version (2.2.0+) => make it work with interfaction guilds (since TWW) & multiples character name for one custom audio file
