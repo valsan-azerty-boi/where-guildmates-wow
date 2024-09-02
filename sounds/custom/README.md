@@ -7,5 +7,4 @@
 #### Example :
 - login_Gorkah.ogg
 - logout_Gorkah.ogg
-- logout_Borsâ.ogg
 - login_Yonhsha.ogg
